@@ -1,0 +1,1 @@
+export const TESTRAIL_PREFIX = '_TestRailID-';

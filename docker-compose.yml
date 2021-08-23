@@ -1,0 +1,37 @@
+version: "3.1"
+services:
+  chrome:
+    image: selenium/standalone-chrome:3.141
+    container_name: chrome
+    ports:
+      - "4444:5555"
+    volumes:
+      - /dev/shm:/dev/shm
+    environment:
+      - NODE_MAX_INSTANCES=10
+      - NODE_MAX_SESSION=10
+      - SCREEN_WIDTH=1536
+      - SCREEN_HEIGHT=864
+    expose:
+      - 4444
+  testing:
+    build: .
+    command: npm run test:docker
+    depends_on:
+      - chrome
+    volumes:
+     - ./reports:/reports
+  ondemand:
+    build: .
+    command: npm run test:ondemand
+    depends_on:
+      - chrome
+    volumes:
+      - ./reports:/reports
+  scheduled:
+    build: .
+    command: npm run test:scheduled
+    depends_on:
+      - chrome
+    volumes:
+      - ./reports:/reports

@@ -1,0 +1,10 @@
+{
+  "presets": ["@babel/preset-env"],
+  "plugins": [
+    ["module-resolver", {
+      "alias": {
+        "e2eRoot": "./tests/e2e"
+      }
+    }]
+  ]
+}
