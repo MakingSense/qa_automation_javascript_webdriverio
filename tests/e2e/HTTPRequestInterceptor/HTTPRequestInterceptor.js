@@ -1,4 +1,3 @@
-require('cross-fetch/polyfill');
 
 // Get all captured requests as an array.
 // Returns array of request objects.
