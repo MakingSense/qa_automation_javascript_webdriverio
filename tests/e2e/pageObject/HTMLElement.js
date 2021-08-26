@@ -32,9 +32,15 @@ class HTMLElement {
     return browser.getUrl();
   }
 
+  getCssProperty(selector, cssPropertyName){
+    return $(selector).getCSSProperty(cssPropertyName);
+  }
+
   goToUrl(url){
     browser.url(url);
   }
+
+
 
   // Setters
 
