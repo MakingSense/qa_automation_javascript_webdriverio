@@ -23,14 +23,14 @@ suite('Suite 2', () => {
     });
 
     test('Test 11',
-        preconditionToEvaluate(),
+        preconditionToEvaluate,
         () => {
             expect(true).toBe(true);
         }
     );
 
     test('Test 12',
-        preconditionToEvaluate(),
+        preconditionToEvaluate,
         () => {
             expect(false).toBe(true);
         }
