@@ -9,10 +9,10 @@ exports.config = {
 
     // Oficial Documentation: https://webdriver.io/docs/options/#suites
     suites: {
-        ondemand: [
+        smoke: [
             './tests/e2e/specs/**/**.smoke.spec.js'
         ],
-        scheduled: [
+        regression: [
             './tests/e2e/specs/**/**.regression.spec.js'
         ]
     },

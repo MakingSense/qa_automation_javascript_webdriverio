@@ -1,6 +1,10 @@
 /**
  * List are handler as arrays in javascript, here is a helper to work with them
  */
+class Array {
+    constructor(array){
+        this.array = array;
+    }
 
 /**
  * returns the value of the first element in the provided array that satisfies the provided testing function.
@@ -8,18 +12,22 @@
  * @param functionToEvaluate
  * @returns {*[]}
  */
-export function findFirst(functionToEvaluate){
-    return [];
-}
+    findFirst(functionToEvaluate){
+        return this.array.find( (element) => {
+            return functionToEvaluate(element);
+        });
+    }
 
 /**
  * Creates a new array with all elements that pass the test implemented by the provided function.
  * @param condition
  * @returns {*[]}
  */
-export function filterByCondition(condition){
-    return [];
-}
+    filterByCondition(condition){
+        return this.array.filter( (element) => {
+            return condition(element);
+        });
+    }
 
 /**
  * The some() method tests whether at least one element in the array passes the test implemented by the provided function.
@@ -27,31 +35,42 @@ export function filterByCondition(condition){
  * @param functionToEvaluate
  * @returns {boolean}
  */
-export function hasSome(functionToEvaluate){
-    return true;
-}
+    hasSome(functionToEvaluate){
+        return this.array.some( (element) => {
+            return functionToEvaluate(element);
+        });
+    }
 
 /**
  *  Method tests whether all elements in the array pass the test implemented by the provided function. It returns a Boolean value.
  * @param functionToEvaluate
  * @returns {boolean}
  */
-export function allAppliedCondition(functionToEvaluate){
-    return true;
-}
+    allAppliedCondition(functionToEvaluate){
+        return this.array.every( (element) => {
+            return functionToEvaluate(element);
+        });
+    }
 
 /**
  * Executes a provided function once for each array element.
  * @param functionToApply
  */
-export function forEach(functionToApply){
-}
+    forEach(functionToApply){
+        this.array.forEach((element) => {
+            functionToApply(element);
+        });
+    }
 
 /**
  * Determines whether an array includes a certain value among its entries, returning true or false as appropriate.
+ *
+ * Offical Documentation: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes
  * @param value
  * @returns {boolean}
  */
-export function contains(value){
-    return true;
+    contains(value){
+        return this.array.includes(value);
+    }
 }
+module.exports = Array;

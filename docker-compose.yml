@@ -21,16 +21,16 @@ services:
       - chrome
     volumes:
      - ./reports:/reports
-  ondemand:
+  smoke:
     build: .
-    command: npm run test:ondemand
+    command: npm run test:smoke
     depends_on:
       - chrome
     volumes:
       - ./reports:/reports
-  scheduled:
+  regression:
     build: .
-    command: npm run test:scheduled
+    command: npm run test:regression
     depends_on:
       - chrome
     volumes:

@@ -1,0 +1,81 @@
+name: Trigger Tests for Dependencies PRs
+on:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Conditions
+        if: |
+          (github.event.action == 'labeled' &&
+          github.event.label.name == 'expectedLabel' )
+        run: |
+          echo "Pull request was labeled with ${{ github.event.label.name }}. This action will trigger the tests execution"
+      - name: Start E2E Tests
+        if: |
+          (github.event.action == 'labeled' &&
+          github.event.label.name == 'expectedLabel' )
+        run: ./e2e-daily-execution-script-scheduled.sh
+      if: success()
+    with:
+      name: general-report
+      path: ./reports/html-reports/tests-results.html
+      - name: Prepare Slack message when Success
+        if: success()
+              id: status
+              uses: actions/github-script@0.8.0
+              with:
+                script: |
+                  const fs=require('fs');
+                  const testsPath = `./reports/html-reports/tests-results.json`
+                  const testsData = fs.readFileSync(testsPath, 'utf8');
+                  const testsArrays = JSON.parse(testsData);
+
+                  console.log("Results")
+                  console.log(testsArrays.metrics)
+
+                  var total = 0
+                  var slack_msg = ''
+                  var total = Number(testsArrays.metrics.passed) + Number(testsArrays.metrics.failed) + Number(testsArrays.metrics.skipped)
+                  slack_msg = {
+                         blocks: [
+                           {
+                                                                    	"type": "section",
+                                                                     "fields": [
+                                                                       {
+                                                                       	"type": "plain_text",
+                                                                       	"text": ":heavy_check_mark:  Passed: " + testsArrays.metrics.passed,
+                                                                       	"emoji": true
+                                                                       },
+                                                                       {
+                                                                       	"type": "plain_text",
+                                                                       	"text": ":x:  Failed: " + testsArrays.metrics.failed,
+                                                                       	"emoji": true
+                                                                       },
+                                                                       {
+                                                                       	"type": "plain_text",
+                                                                       	"text": ":construction:  Repairing (skipped): " + testsArrays.metrics.skipped,
+                                                                       	"emoji": true
+                                                                       },
+                                                                       {
+                                                                       	"type": "plain_text",
+                                                                       	"text": ":pushpin:  Total:  " + total,
+                                                                       	"emoji": true
+                                                                       }
+                                                                       ]
+                                                                     },
+                                                                     {
+                                                                        "type": "section",
+                                                                       	"text": {
+                                                                       			"type": "plain_text",
+                                                                       			"text": "Completed in: " + testsArrays.metrics.duration
+                                                                       		}
+                                                                     }
+                   ]
+                  }
+                  console.log(slack_msg)
+                  return slack_msg
+            - name: Send to Slack
+              if: success()
+              run: |
+                curl -X POST ${{ secrets.SLACK_WEBHOOK_URL}} -H "Content-type: application/json" --data '${{ steps.status.outputs.result }}'

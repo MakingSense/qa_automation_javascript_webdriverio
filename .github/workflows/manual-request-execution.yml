@@ -1,0 +1,190 @@
+name: Manual triggering
+on:
+  workflow_dispatch:
+   inputs:
+    base_url:
+       description: 'base Url'
+       required: true
+    parameter_1:
+     description: 'First Required Parameter'
+     required: true
+    parameter_2:
+      description: 'Second Parameter'
+      required: false
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cheking if request was made manually
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+         echo "Execution Manually Triggered"
+         echo "The provided parameters were ${{github.event.inputs.parameter_1}} && ${{github.event.inputs.parameter_2}}"
+      - uses: actions/checkout@v2
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+         node-version: '12.16.1'
+      - name: Getting Workflow Run Data
+        if: success()
+        id: runid
+        uses: actions/github-script@0.8.0
+        with:
+          script: |
+            const wf_run = await github.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: ${{ github.run_id }}
+            })
+            console.log(wf_run.data)
+            const jobs_response = await github.request(wf_run.data.jobs_url)
+
+            let runLink = wf_run.data.html_url
+
+            return wf_run.data.html_url
+      - name: Launching Execution
+        id: dependencies
+        run: ./e2e-daily-execution-script.sh baseurl=${{ github.event.inputs.base_url }}
+      - uses: actions/upload-artifact@v2
+        if: success()
+        with:
+         name: general-report
+         path: |
+          ./reports/html-reports/tests-results.html
+          ./reports/html-reports/report-styles.css
+      - uses: actions/upload-artifact@v2
+        if: success()
+        with:
+          name: before-suite-screenshots
+          path: ./reports/html-reports/screenshots/bs-*.png
+          if-no-files-found: ignore # 'warn' or 'ignore' are also available, defaults to `warn`
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: partial-reports
+          path: ./reports/html-reports/screenshots/
+      - name: Prepare Slack message when Success
+        if: success()
+        id: status
+        uses: actions/github-script@0.8.0
+        with:
+          script: |
+            const wf_run = await github.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: ${{ github.run_id }}
+            })
+            console.log(wf_run.data)
+
+            const fs=require('fs');
+            const testsPath = `./reports/html-reports/tests-results.json`
+            const testsData = fs.readFileSync(testsPath, 'utf8');
+            const testsArrays = JSON.parse(testsData);
+
+            console.log("Results")
+            console.log(testsArrays.metrics)
+
+            var total = 0
+            var slack_msg = ''
+            const jobs_response = await github.request(wf_run.data.jobs_url)
+
+            // Info about E2E repository
+
+            const commit = "${{ github.sha }}".substr(0, 6)
+            const e2e_info = "<https://github.com/${{ github.repository }}|*${{ github.repository }}*>\nfrom *${{ github.ref }}@" + commit + "*"
+
+            // Cheking if hooks has errors
+            let hooksError = 0;
+            testsArrays.suites.forEach((suite) => {
+            suite.hooks.forEach((hook) => {
+              if (hook.errors) {
+                if (hook.errors.length > 0)
+                    hooksError +=1;
+               }
+              });
+            });
+            console.log(hooksError);
+
+            var milliseconds = Math.floor((testsArrays.metrics.duration % 1000) / 100),
+                         seconds = Math.floor((testsArrays.metrics.duration / 1000) % 60),
+                         minutes = Math.floor((testsArrays.metrics.duration / (1000 * 60)) % 60),
+                         hours = Math.floor((testsArrays.metrics.duration / (1000 * 60 * 60)) % 24);
+
+                         hours = (hours < 10) ? "0" + hours : hours;
+                         minutes = (minutes < 10) ? "0" + minutes : minutes;
+                         seconds = (seconds < 10) ? "0" + seconds : seconds;
+
+            var totalDuration = hours + ":" + minutes + ":" + seconds + "." + milliseconds;
+
+            let finalCountErrors = Number(testsArrays.metrics.failed) - hooksError;
+            total = Number(testsArrays.metrics.passed) + finalCountErrors + Number(testsArrays.metrics.skipped)
+
+            const event_name = "${{github.event_name}}"
+            var prUrl = ''
+
+            if (event_name == 'workflow_dispatch')
+              prUrl = "Pull Request: <https://github.com/vas-dev/Morpheus-FE/pull/${{ github.event.inputs.pull_request_number }}|${{ github.event.inputs.pull_request_number }}>"
+
+                             slack_msg = {
+                                      blocks: [
+                                          {
+                                            "type": "section",
+                                            "text": {
+                                                "type": "plain_text",
+                                                "text": "Dependabot identified an outdated dependency. A pull request was raised to update the manifest to the latest version of the dependency",
+                                                "emoji": true
+                                            }
+                                        },
+                                        {
+                                           type: "section",
+                                           text: {
+                                                 "type": "mrkdwn",
+                                                 "text": prUrl
+                                                  }
+                                        },
+                                          {
+                                           	"type": "section",
+                                            "fields": [
+                                              {
+                                              	"type": "plain_text",
+                                              	"text": ":heavy_check_mark:  Passed: " + testsArrays.metrics.passed,
+                                              	"emoji": true
+                                              },
+                                              {
+                                              	"type": "plain_text",
+                                              	"text": ":x:  Failed: " + finalCountErrors,
+                                              	"emoji": true
+                                              },
+                                              {
+                                              	"type": "plain_text",
+                                              	"text": ":pushpin:  Total:  " + total,
+                                              	"emoji": true
+                                              }
+                                              ]
+                                            },
+                                            {
+                                               "type": "section",
+                                              	"text": {
+                                              			"type": "plain_text",
+                                              			"text": "Completed in: " + totalDuration
+                                              		}
+                                            },
+                                            {
+                                                "type": "divider"
+                                             },
+                                            {
+                                                type: "section",
+                                                text: {
+                                                        "type": "mrkdwn",
+                                                        "text": "*Download Html Report with results from* <" + wf_run.data.html_url + "|#${{ github.run_number }}>"
+                                                     }
+                                            }
+                                          ]
+                                      }
+
+            console.log(slack_msg)
+            return slack_msg
+      - name: Sending Results to Slack Channel
+        if: success()
+        run: |
+          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL}} -H "Content-type: application/json" --data '${{ steps.status.outputs.result }}'
