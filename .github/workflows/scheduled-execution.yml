@@ -1,19 +1,12 @@
 name: Automated Suite Execution
 on:
-  #schedule:
-   #- cron: "0 */8 * * 1-5"
-  repository_dispatch:
-   types: test-on-demand
+  schedule:
+   - cron: "0 */8 * * 1-5"
+
 jobs:
-  build:
-
+  test:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Information
-        if: github.event.action == 'test-on-demand'
-        run: |
-         echo "Event '${{ github.event.action }}' received from '${{ github.event.client_payload.github_repository }}'*${{ github.event.client_payload.github_ref }}@'${{ github.event.client_payload.github_sha }}'. Sent by: '${{ github.event.client_payload.github_actor}}'"
       - name: Information
         if: github.event_name == 'schedule'
         run: |
@@ -23,11 +16,6 @@ jobs:
         uses: actions/setup-node@v1
         with:
          node-version: '12.0.0'
-      - name: Testing Web App On Demand
-        if: github.event.action == 'test-on-demand'
-        id: demanded
-        run: ./e2e-daily-execution-script-on-demand.sh
-        timeout-minutes: 60
       - name: Testing Web App Scheduled Execution
         if: github.event_name == 'schedule'
         id: scheduled

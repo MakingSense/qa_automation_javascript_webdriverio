@@ -1,17 +1,5 @@
 import moment from 'moment-timezone'
 
-const locale  = {
-    EN: 'en',
-    ES: 'es',
-    FR_CA: 'fr-ca',
-    DE: 'de',
-    RU: 'ru',
-    ZH_CN: 'zh-cn',
-    IT: 'it',
-    PL: 'pl',
-    CS: 'cs',
-    ET: 'et',
-}
 export const DEFAULT_DATE_FORMAT = 'MM/DD/YYYY'
 export const DEFAULT_DATE_FORMAT_VARIANT = 'MM-DD-YYYY'
 export const DEFAULT_DATE_AND_TIME_FORMAT = 'MM/DD/YYYY hh:mm A'
@@ -32,7 +20,19 @@ export const DATE_FORMATS = {
     },
 }
 
-// dateToFormat: MomentInput, format: string =
+const locale  = {
+    EN: 'en',
+    ES: 'es',
+    FR_CA: 'fr-ca',
+    DE: 'de',
+    RU: 'ru',
+    ZH_CN: 'zh-cn',
+    IT: 'it',
+    PL: 'pl',
+    CS: 'cs',
+    ET: 'et',
+}
+
 export function formatDate(dateToFormat, format = DEFAULT_DATE_FORMAT) {
     return moment(dateToFormat).format(format)
 }
@@ -45,7 +45,7 @@ export function formatCowcardHeaderDates(dateToFormat) {
  * @param date
  * @returns {boolean}
  */
-/*
+
 export function isNewerDate(date, fromDateInput) {
     if (!date) {
         return false
@@ -56,14 +56,14 @@ export function isNewerDate(date, fromDateInput) {
     const res = fromDate.diff(date)
     return res < 0
 }
-*/
+
 /**
  * Will return the date difference between 2 dates (humanized). If not passed fromDate will be considered as today.
  * @param toDateInput
  * @param fromDateInput
  * @returns {*}
  */
-/*
+
 export function datesDiff(toDateInput, fromDateInput, locale= locale.EN) {
     moment.locale(locale)
     const toDate = moment(toDateInput)
@@ -78,4 +78,4 @@ export function datesDiff(toDateInput, fromDateInput, locale= locale.EN) {
         diff = toDate.from(fromDate)
     }
     return diff
-}*/
+}

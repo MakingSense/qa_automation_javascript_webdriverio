@@ -10,9 +10,8 @@
   "scripts": {
     "test": "./node_modules/.bin/wdio run tests/e2e/wdio.chrome.en.conf.js",
     "test:docker": "./node_modules/.bin/wdio run tests/e2e/wdio.chrome.docker.conf.js",
-    "test:ondemand": "./node_modules/.bin/wdio run tests/e2e/wdio.chrome.docker.conf.js --suite ondemand",
-    "test:scheduled": "./node_modules/.bin/wdio run tests/e2e/wdio.chrome.docker.conf.js --suite scheduled",
-    "testrail": "./node_modules/.bin/wdio run tests/e2e/wdio.config.testrail.js"
+    "test:smoke": "./node_modules/.bin/wdio run tests/e2e/wdio.chrome.docker.conf.js --suite smoke",
+    "test:regression": "./node_modules/.bin/wdio run tests/e2e/wdio.chrome.docker.conf.js --suite regression"
   },
   "dependencies": {
     "@babel/polyfill": "^7.12.1",
