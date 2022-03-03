@@ -16,16 +16,17 @@ jobs:
           (github.event.action == 'labeled' &&
           github.event.label.name == 'expectedLabel' )
         run: ./e2e-daily-execution-script-scheduled.sh
-      if: success()
-    with:
-      name: general-report
-      path: ./reports/html-reports/tests-results.html
+      - uses: actions/upload-artifact@v2  
+        if: success()
+        with:
+          name: general-report
+          path: ./reports/html-reports/tests-results.html
       - name: Prepare Slack message when Success
         if: success()
-              id: status
-              uses: actions/github-script@0.8.0
-              with:
-                script: |
+        id: status
+        uses: actions/github-script@0.8.0
+        with:
+          script: |
                   const fs=require('fs');
                   const testsPath = `./reports/html-reports/tests-results.json`
                   const testsData = fs.readFileSync(testsPath, 'utf8');
@@ -75,7 +76,7 @@ jobs:
                   }
                   console.log(slack_msg)
                   return slack_msg
-            - name: Send to Slack
-              if: success()
-              run: |
-                curl -X POST ${{ secrets.SLACK_WEBHOOK_URL}} -H "Content-type: application/json" --data '${{ steps.status.outputs.result }}'
+      - name: Send to Slack
+        if: success()
+        run: |
+              curl -X POST ${{ secrets.SLACK_WEBHOOK_URL}} -H "Content-type: application/json" --data '${{ steps.status.outputs.result }}'
