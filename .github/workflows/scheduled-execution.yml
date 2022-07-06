@@ -28,62 +28,40 @@ jobs:
         with:
           name: general-report
           path: ./reports/html-reports/tests-results.html
-      - name: Prepare Slack message when Success
-        if: success()
-        id: status
-        uses: actions/github-script@0.8.0
-        with:
-          script: |
-              const fs=require('fs');
-              const testsPath = `./reports/html-reports/tests-results.json`
-              const testsData = fs.readFileSync(testsPath, 'utf8');
-              const testsArrays = JSON.parse(testsData);
-
-              console.log("Results")
-              console.log(testsArrays.metrics)
-
-              var total = 0
-              var slack_msg = ''
-              var total = Number(testsArrays.metrics.passed) + Number(testsArrays.metrics.failed) + Number(testsArrays.metrics.skipped)
-              slack_msg = {
-                     blocks: [
-                       {
-                                                                	"type": "section",
-                                                                 "fields": [
-                                                                   {
-                                                                   	"type": "plain_text",
-                                                                   	"text": ":heavy_check_mark:  Passed: " + testsArrays.metrics.passed,
-                                                                   	"emoji": true
-                                                                   },
-                                                                   {
-                                                                   	"type": "plain_text",
-                                                                   	"text": ":x:  Failed: " + testsArrays.metrics.failed,
-                                                                   	"emoji": true
-                                                                   },
-                                                                   {
-                                                                   	"type": "plain_text",
-                                                                   	"text": ":construction:  Repairing (skipped): " + testsArrays.metrics.skipped,
-                                                                   	"emoji": true
-                                                                   },
-                                                                   {
-                                                                   	"type": "plain_text",
-                                                                   	"text": ":pushpin:  Total:  " + total,
-                                                                   	"emoji": true
-                                                                   }
-                                                                   ]
-                                                                 },
-                                                                 {
-                                                                    "type": "section",
-                                                                   	"text": {
-                                                                   			"type": "plain_text",
-                                                                   			"text": "Completed in: " + testsArrays.metrics.duration
-                                                                   		}
-                                                                 }
-               ]
-              }
-              console.log(slack_msg)
-              return slack_msg
       - name: Send to Slack
         if: success()
         run: |
-            curl -X POST ${{ secrets.SLACK_WEBHOOK_URL}} -H "Content-type: application/json" --data '${{ steps.status.outputs.result }}'
+            curl -X POST ${{ secrets.SLACK_WEBHOOK_URL}} -H "Content-type: application/json" --data '{
+                                                                                                 	"blocks": [
+                                                                                                 		{
+                                                                                                 			"type": "divider"
+                                                                                                 		},
+                                                                                                 		{
+                                                                                                 			"type": "divider"
+                                                                                                 		},
+                                                                                                 		{
+                                                                                                 			"type": "section",
+                                                                                                 			"text": {
+                                                                                                 				"type": "plain_text",
+                                                                                                 				"text": "This is a plain text section block.",
+                                                                                                 				"emoji": true
+                                                                                                 			}
+                                                                                                 		},
+                                                                                                 		{
+                                                                                                 			"type": "section",
+                                                                                                 			"text": {
+                                                                                                 				"type": "mrkdwn",
+                                                                                                 				"text": "Test block with users select"
+                                                                                                 			},
+                                                                                                 			"accessory": {
+                                                                                                 				"type": "users_select",
+                                                                                                 				"placeholder": {
+                                                                                                 					"type": "plain_text",
+                                                                                                 					"text": "Select a user",
+                                                                                                 					"emoji": true
+                                                                                                 				},
+                                                                                                 				"action_id": "users_select-action"
+                                                                                                 			}
+                                                                                                 		}
+                                                                                                 	]
+                                                                                                 }'

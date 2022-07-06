@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Information
-        if: github.event.action == 'test-on-demand'
+        if: github.event.action == 'test-on-demand' # any event name can be used here
         run: |
          echo "Event '${{ github.event.action }}' received from '${{ github.event.client_payload.github_repository }}'*${{ github.event.client_payload.github_ref }}@'${{ github.event.client_payload.github_sha }}'. Sent by: '${{ github.event.client_payload.github_actor}}'"
       - uses: actions/checkout@v2
@@ -25,62 +25,28 @@ jobs:
         with:
           name: general-report
           path: ./reports/html-reports/tests-results.html
-      - name: Prepare Slack message when Success
-        if: success()
-        id: status
-        uses: actions/github-script@0.8.0
-        with:
-          script: |
-              const fs=require('fs');
-              const testsPath = `./reports/html-reports/tests-results.json`
-              const testsData = fs.readFileSync(testsPath, 'utf8');
-              const testsArrays = JSON.parse(testsData);
-
-              console.log("Results")
-              console.log(testsArrays.metrics)
-
-              var total = 0
-              var slack_msg = ''
-              var total = Number(testsArrays.metrics.passed) + Number(testsArrays.metrics.failed) + Number(testsArrays.metrics.skipped)
-              slack_msg = {
-                     blocks: [
-                       {
-                                                                	"type": "section",
-                                                                 "fields": [
-                                                                   {
-                                                                   	"type": "plain_text",
-                                                                   	"text": ":heavy_check_mark:  Passed: " + testsArrays.metrics.passed,
-                                                                   	"emoji": true
-                                                                   },
-                                                                   {
-                                                                   	"type": "plain_text",
-                                                                   	"text": ":x:  Failed: " + testsArrays.metrics.failed,
-                                                                   	"emoji": true
-                                                                   },
-                                                                   {
-                                                                   	"type": "plain_text",
-                                                                   	"text": ":construction:  Repairing (skipped): " + testsArrays.metrics.skipped,
-                                                                   	"emoji": true
-                                                                   },
-                                                                   {
-                                                                   	"type": "plain_text",
-                                                                   	"text": ":pushpin:  Total:  " + total,
-                                                                   	"emoji": true
-                                                                   }
-                                                                   ]
-                                                                 },
-                                                                 {
-                                                                    "type": "section",
-                                                                   	"text": {
-                                                                   			"type": "plain_text",
-                                                                   			"text": "Completed in: " + testsArrays.metrics.duration
-                                                                   		}
-                                                                 }
-               ]
-              }
-              console.log(slack_msg)
-              return slack_msg
       - name: Send to Slack
         if: success()
         run: |
-            curl -X POST ${{ secrets.SLACK_WEBHOOK_URL}} -H "Content-type: application/json" --data '${{ steps.status.outputs.result }}'
+            curl -X POST ${{ secrets.SLACK_WEBHOOK_URL}} -H "Content-type: application/json" --data '{
+                                                                                                 	"blocks": [
+                                                                                                 		{
+                                                                                                 			"type": "divider"
+                                                                                                 		},
+                                                                                                 		{
+                                                                                                 			"type": "section",
+                                                                                                 			"text": {
+                                                                                                 				"type": "mrkdwn",
+                                                                                                 				"text": "*Farmhouse Thai Cuisine*\n:star::star::star::star: 1528 reviews\n They do have some vegan options, like the roti and curry, plus they have a ton of salad stuff and noodles can be ordered without meat!! They have something for everyone here"
+                                                                                                 			},
+                                                                                                 			"accessory": {
+                                                                                                 				"type": "image",
+                                                                                                 				"image_url": "https://s3-media3.fl.yelpcdn.com/bphoto/c7ed05m9lC2EmA3Aruue7A/o.jpg",
+                                                                                                 				"alt_text": "alt text for image"
+                                                                                                 			}
+                                                                                                 		},
+                                                                                                 		{
+                                                                                                 			"type": "divider"
+                                                                                                 		}
+                                                                                                 	]
+                                                                                                 }'
